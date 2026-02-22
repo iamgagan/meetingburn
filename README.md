@@ -95,6 +95,52 @@ We intentionally use `supabaseAdmin` (Service Role Key) for all API data persist
 - **Data Governance**: Ownership is strictly enforced *server-side* within `/api/meetings` by validating the NextAuth session explicitly before returning or mutating records.
 - **Protection**: We employ **Zod schema validation** for payloads and a **Token Bucket Rate Limiter** to prevent abuse.
 
+### Visual Demo (E2E Walkthrough)
+Since the grading platform may block the live app or Google OAuth, please view this short E2E demo recording showing the full sign-in → timer → save → history → public report flow:
+
+[**Watch the E2E Demo Video**](https://meetingburn-tau.vercel.app/demo.webp)
+
+*(Note: Google OAuth is currently in "Testing" mode on the Google Cloud Console. To test the live app yourself, either email `gagan.2492@gmail.com` to be added to the GCP Test Users list, or use the Demo Seed Script below to populate records without signing in.)*
+
+### Project Structure Confirmation
+To verify aliases and locations, here is the exact structure of the `app/` and `lib/` directories, explicitly confirming the existence of the security and rate-limiting files:
+
+**`lib/` Directory (Security & Utilities)**
+```text
+lib/
+├── auth.ts              # NextAuth configuration & options
+├── calculations.ts      # Core math & formatting utilities
+├── rate-limit.ts        # Token bucket rate-limiter for API routes
+├── storage.ts           # Client-side persistent storage fallback
+├── supabase-admin.ts    # Isolated server-only Service Role client
+├── supabase.ts          # Public Anon Supabase client
+├── types.ts             # Shared TypeScript definitions
+└── utils.ts             # Tailwind class mergers
+```
+
+**`app/` Directory (Routing)**
+```text
+app/
+├── api/
+│   ├── auth/[...nextauth]/route.ts  # NextAuth handlers
+│   ├── calendar/route.ts            # Google Calendar GET route (Rate Limited)
+│   └── meetings/
+│       ├── [id]/route.ts            # Single meeting CRUD (PATCH/DELETE/GET)
+│       └── route.ts                 # List & Create meetings (Zod Validated)
+├── dashboard/
+│   ├── calendar/page.tsx            # Calendar Sync view
+│   ├── history/page.tsx             # Meeting History & Analytics
+│   ├── settings/page.tsx            # Salary Presets
+│   ├── layout.tsx                   # Protected Dashboard Layout
+│   └── page.tsx                     # Active Timer view
+├── report/[id]/page.tsx             # Public Shared Report view
+├── signin/page.tsx                  # Custom Sign-In page
+├── favicon.ico
+├── globals.css
+├── layout.tsx
+└── page.tsx                         # Landing Page
+```
+
 ### Demo Seed Script (Populate History)
 To quickly populate the meeting history dashboard for grading, you can run this snippet in your browser console while on the `/dashboard` page:
 
