@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Flame, LayoutDashboard, History, Settings, ArrowLeft, Calendar } from 'lucide-react';
+import { useSession, signOut } from 'next-auth/react';
+import { Flame, LayoutDashboard, History, Settings, ArrowLeft, Calendar, LogOut, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function DashboardLayout({
@@ -11,6 +12,7 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    const { data: session } = useSession();
 
     const navItems = [
         { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -53,7 +55,50 @@ export default function DashboardLayout({
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-border/20">
+                {/* User / Auth Section */}
+                <div className="p-4 border-t border-border/20 space-y-2">
+                    {session?.user ? (
+                        <div className="flex items-center gap-3 px-2 mb-2">
+                            {session.user.image ? (
+                                <img
+                                    src={session.user.image}
+                                    alt=""
+                                    className="w-7 h-7 rounded-full"
+                                />
+                            ) : (
+                                <div className="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400">
+                                    {session.user.name?.[0] || '?'}
+                                </div>
+                            )}
+                            <div className="min-w-0">
+                                <p className="text-sm font-medium truncate">{session.user.name}</p>
+                                <p className="text-xs text-muted-foreground truncate">{session.user.email}</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-emerald-400 hover:text-emerald-300"
+                            asChild
+                        >
+                            <Link href="/signin">
+                                <LogIn className="w-4 h-4 mr-2" /> Sign In
+                            </Link>
+                        </Button>
+                    )}
+
+                    {session?.user && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-muted-foreground"
+                            onClick={() => signOut({ callbackUrl: '/' })}
+                        >
+                            <LogOut className="w-4 h-4 mr-2" /> Sign Out
+                        </Button>
+                    )}
+
                     <Button
                         variant="ghost"
                         size="sm"

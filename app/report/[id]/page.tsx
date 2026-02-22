@@ -20,6 +20,21 @@ export default function ReportPage() {
 
     useEffect(() => {
         const load = async () => {
+            // Try API first (works for shared public reports across browsers)
+            try {
+                const res = await fetch(`/api/meetings/${meetingId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.id) {
+                        setMeeting(data);
+                        return;
+                    }
+                }
+            } catch {
+                // API failed, try localStorage
+            }
+
+            // Fallback: check localStorage (for report owner)
             const meetings = await getMeetings();
             const found = meetings.find((m) => m.id === meetingId);
             if (found) {

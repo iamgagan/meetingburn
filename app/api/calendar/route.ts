@@ -1,54 +1,75 @@
 import { NextResponse } from 'next/server';
 
 // GET /api/calendar — Fetch Google Calendar events
-// This route requires a valid Google OAuth token with calendar.readonly scope
+// In production, this uses NextAuth session to get the user's Google access token
 
 export async function GET() {
-    // Placeholder: In production, use NextAuth session to get the user's
-    // Google access token and fetch from Google Calendar API
+    // TODO: When Google OAuth is configured, uncomment this block:
     //
     // const session = await getServerSession(authOptions);
-    // const accessToken = session?.accessToken;
+    // const accessToken = (session as any)?.accessToken;
     //
-    // const response = await fetch(
-    //   'https://www.googleapis.com/calendar/v3/calendars/primary/events?' +
-    //     new URLSearchParams({
-    //       timeMin: new Date().toISOString(),
-    //       timeMax: new Date(Date.now() + 86400000).toISOString(),
-    //       singleEvents: 'true',
-    //       orderBy: 'startTime',
-    //     }),
-    //   {
-    //     headers: { Authorization: `Bearer ${accessToken}` },
-    //   }
-    // );
+    // if (accessToken) {
+    //   const response = await fetch(
+    //     'https://www.googleapis.com/calendar/v3/calendars/primary/events?' +
+    //       new URLSearchParams({
+    //         timeMin: new Date().toISOString(),
+    //         timeMax: new Date(Date.now() + 86400000).toISOString(),
+    //         singleEvents: 'true',
+    //         orderBy: 'startTime',
+    //       }),
+    //     {
+    //       headers: { Authorization: `Bearer ${accessToken}` },
+    //     }
+    //   );
+    //   const data = await response.json();
+    //   // Map Google Calendar events to our format
+    // }
+
+    // Demo data — randomized times based on current time to look realistic
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0);
+
+    const demoMeetings = [
+        {
+            id: `cal-${now.toISOString().split('T')[0]}-1`,
+            summary: 'Daily Standup',
+            start: new Date(todayStart.getTime()).toISOString(),
+            end: new Date(todayStart.getTime() + 15 * 60000).toISOString(),
+            attendeeCount: 6,
+        },
+        {
+            id: `cal-${now.toISOString().split('T')[0]}-2`,
+            summary: 'Sprint Planning',
+            start: new Date(todayStart.getTime() + 60 * 60000).toISOString(),
+            end: new Date(todayStart.getTime() + 120 * 60000).toISOString(),
+            attendeeCount: 10,
+        },
+        {
+            id: `cal-${now.toISOString().split('T')[0]}-3`,
+            summary: 'Design Review',
+            start: new Date(todayStart.getTime() + 180 * 60000).toISOString(),
+            end: new Date(todayStart.getTime() + 210 * 60000).toISOString(),
+            attendeeCount: 4,
+        },
+        {
+            id: `cal-${now.toISOString().split('T')[0]}-4`,
+            summary: '1:1 with Manager',
+            start: new Date(todayStart.getTime() + 240 * 60000).toISOString(),
+            end: new Date(todayStart.getTime() + 270 * 60000).toISOString(),
+            attendeeCount: 2,
+        },
+        {
+            id: `cal-${now.toISOString().split('T')[0]}-5`,
+            summary: 'All-Hands Update',
+            start: new Date(todayStart.getTime() + 300 * 60000).toISOString(),
+            end: new Date(todayStart.getTime() + 360 * 60000).toISOString(),
+            attendeeCount: 25,
+        },
+    ];
 
     return NextResponse.json({
-        message:
-            'Calendar API ready. Configure Google OAuth to enable calendar sync.',
-        events: [
-            // Demo data for UI development
-            {
-                id: 'demo-1',
-                summary: 'Daily Standup',
-                start: new Date().toISOString(),
-                end: new Date(Date.now() + 900000).toISOString(), // 15 min
-                attendeeCount: 6,
-            },
-            {
-                id: 'demo-2',
-                summary: 'Sprint Planning',
-                start: new Date(Date.now() + 3600000).toISOString(),
-                end: new Date(Date.now() + 7200000).toISOString(), // 1 hr
-                attendeeCount: 10,
-            },
-            {
-                id: 'demo-3',
-                summary: 'Design Review',
-                start: new Date(Date.now() + 10800000).toISOString(),
-                end: new Date(Date.now() + 12600000).toISOString(), // 30 min
-                attendeeCount: 4,
-            },
-        ],
+        demo: true,
+        events: demoMeetings,
     });
 }

@@ -23,6 +23,7 @@ export default function CalendarPage() {
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [loading, setLoading] = useState(false);
     const [synced, setSynced] = useState(false);
+    const [isDemo, setIsDemo] = useState(false);
     const [defaultSalary, setDefaultSalary] = useState(120000);
     const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
 
@@ -37,6 +38,7 @@ export default function CalendarPage() {
             const res = await fetch('/api/calendar');
             const data = await res.json();
             setEvents(data.events || []);
+            setIsDemo(data.demo === true);
             setSynced(true);
         } catch {
             // Handle error silently
@@ -165,6 +167,11 @@ export default function CalendarPage() {
                         <CardTitle className="text-base flex items-center gap-2">
                             <CalendarIcon className="w-4 h-4 text-emerald-400" />
                             Today&apos;s Meetings
+                            {isDemo && (
+                                <Badge variant="outline" className="border-amber-500/30 text-amber-400 text-xs">
+                                    Demo Data
+                                </Badge>
+                            )}
                             <Badge variant="outline" className="ml-auto border-border/30 text-xs">
                                 {events.length} events
                             </Badge>
@@ -194,8 +201,8 @@ export default function CalendarPage() {
                                     transition={{ delay: i * 0.1 }}
                                     onClick={() => setSelectedEvent(isSelected ? null : event.id)}
                                     className={`rounded-lg border p-4 cursor-pointer transition-all ${isSelected
-                                            ? 'border-emerald-500/40 bg-emerald-500/5'
-                                            : 'border-border/20 bg-background/30 hover:border-border/40'
+                                        ? 'border-emerald-500/40 bg-emerald-500/5'
+                                        : 'border-border/20 bg-background/30 hover:border-border/40'
                                         }`}
                                 >
                                     <div className="flex items-center justify-between">
