@@ -17,11 +17,32 @@ export const metadata: Metadata = {
   title: "MeetingBurn — See What Your Meetings Really Cost",
   description:
     "A real-time meeting cost calculator that shows exactly how much your meetings cost in dollars. Track, analyze, and reduce meeting waste.",
+  metadataBase: new URL("https://meetingburn-tau.vercel.app"),
   openGraph: {
     title: "MeetingBurn — See What Your Meetings Really Cost",
     description:
-      "A real-time meeting cost calculator that shows exactly how much your meetings cost in dollars.",
+      "Watch the dollars tick up in real-time. Finally quantify 'this could have been an email.'",
+    url: "https://meetingburn-tau.vercel.app",
+    siteName: "MeetingBurn",
     type: "website",
+    images: [
+      {
+        url: "/landing_page_KashMoney.png",
+        width: 1512,
+        height: 900,
+        alt: "MeetingBurn — Real-time meeting cost calculator",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MeetingBurn — See What Your Meetings Really Cost",
+    description:
+      "Watch the dollars tick up in real-time. Finally quantify 'this could have been an email.'",
+    images: ["/landing_page_KashMoney.png"],
+  },
+  icons: {
+    icon: "/favicon.ico",
   },
 };
 

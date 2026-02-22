@@ -346,3 +346,23 @@
   color: oklch(0.7 0.22 25);
   text-shadow: 0 0 40px oklch(0.7 0.22 25 / 0.35);
 }
+
+/* Accessibility: Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animated-border::before {
+    animation: none;
+  }
+
+  .bento-card:hover {
+    transform: none;
+  }
+}

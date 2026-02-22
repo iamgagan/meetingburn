@@ -1,0 +1,21 @@
+# MeetingBurn — Route Tree
+# Generated from app/ directory (Next.js 16 App Router)
+
+## Pages (UI Routes)
+/                              → Landing page with live cost demo
+/signin                        → Google OAuth sign-in page
+/dashboard                     → Main dashboard (cost calculator + recent meetings)
+/dashboard/calendar            → Google Calendar sync
+/dashboard/history             → Meeting history with analytics charts
+/dashboard/settings            → Salary presets management
+/report/[id]                   → Shareable public meeting cost report
+
+## API Routes
+/api/auth/[...nextauth]        → NextAuth.js endpoints (Google OAuth)
+/api/meetings                  → GET (list user meetings), POST (save meeting)
+/api/meetings/[id]             → GET (public report), PATCH (update/toggle public), DELETE
+/api/calendar                  → GET (calendar events, demo mode with Google API path)
+
+## Layouts
+/                              → RootLayout (SessionProvider, metadata, fonts)
+/dashboard/*                   → DashboardLayout (sidebar nav, auth-aware user panel)

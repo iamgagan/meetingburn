@@ -6,6 +6,11 @@ export const authOptions: AuthOptions = {
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID || '',
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+            authorization: {
+                params: {
+                    scope: 'openid email profile https://www.googleapis.com/auth/calendar.readonly',
+                },
+            },
         }),
     ],
     pages: {
@@ -15,6 +20,10 @@ export const authOptions: AuthOptions = {
         async session({ session, token }) {
             if (session.user && token.sub) {
                 (session.user as Record<string, unknown>).id = token.sub;
+            }
+            // Pass Google access token to session for Calendar API
+            if (token.accessToken) {
+                (session as unknown as Record<string, unknown>).accessToken = token.accessToken as string;
             }
             return session;
         },
