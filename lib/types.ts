@@ -13,8 +13,9 @@ export interface MeetingRecord {
   duration_seconds: number;
   total_cost: number;
   source: 'manual' | 'calendar';
-  calendar_event_id?: string;
+  calendar_event_id?: string | null;
   is_public: boolean;
+  public_slug?: string;
   created_at: string;
 }
 

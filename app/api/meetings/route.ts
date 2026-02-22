@@ -11,7 +11,8 @@ const meetingSchema = z.object({
     avg_salary: z.number().positive(),
     duration_seconds: z.number().nonnegative(),
     total_cost: z.number().nonnegative().optional(),
-    source: z.string().optional()
+    source: z.string().optional(),
+    calendar_event_id: z.string().optional()
 });
 
 // GET /api/meetings — List meetings for authenticated user
@@ -68,7 +69,25 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { meeting_name, attendees, avg_salary, duration_seconds, total_cost, source } = validation.data;
+        const { meeting_name, attendees, avg_salary, duration_seconds, total_cost, source, calendar_event_id } = validation.data;
+        const user_id = (session.user as Record<string, unknown>).id as string;
+
+        // Deduplication for calendar events
+        if (calendar_event_id) {
+            const { data: existingEvent } = await supabaseAdmin
+                .from('meetings')
+                .select('*')
+                .eq('user_id', user_id)
+                .eq('calendar_event_id', calendar_event_id)
+                .single();
+
+            if (existingEvent) {
+                return NextResponse.json({ meeting: existingEvent, deduplicated: true }, { status: 200 });
+            }
+        }
+
+        // Generate a random, short URL-safe string for the public report (e.g., 8 chars)
+        const public_slug = Math.random().toString(36).substring(2, 10);
 
         const meeting = {
             id: crypto.randomUUID(),
@@ -79,7 +98,9 @@ export async function POST(request: NextRequest) {
             duration_seconds,
             total_cost: total_cost || 0,
             source: source || 'manual',
+            calendar_event_id: calendar_event_id || null,
             is_public: true,
+            public_slug,
             created_at: new Date().toISOString(),
         };
 

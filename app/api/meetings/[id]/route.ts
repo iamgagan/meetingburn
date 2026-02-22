@@ -11,11 +11,11 @@ export async function GET(
     const resolvedParams = await Promise.resolve(params);
     const id = resolvedParams.id;
 
-    // Use admin client to fetch by ID and ensure it's public
+    // Use admin client to fetch by ID or public slug and ensure it's public
     const { data, error } = await supabaseAdmin
         .from('meetings')
         .select('*')
-        .eq('id', id)
+        .or(`id.eq.${id},public_slug.eq.${id}`)
         .eq('is_public', true)
         .single();
 

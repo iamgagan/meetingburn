@@ -62,10 +62,11 @@ export default function CalendarPage() {
     const totalMinutes = events.reduce((sum, e) => sum + getEventDuration(e), 0);
 
     const startMeetingFromEvent = (event: CalendarEvent) => {
-        const data: MeetingFormData = {
+        const data: MeetingFormData & { calendarEventId?: string } = {
             meetingName: event.summary,
             attendees: event.attendeeCount,
             avgSalary: defaultSalary,
+            calendarEventId: event.id
         };
         // Store in sessionStorage and redirect to dashboard
         sessionStorage.setItem('meetingburn_autostart', JSON.stringify(data));

@@ -287,7 +287,7 @@ export default function HistoryPage() {
                                                 asChild
                                                 className="text-muted-foreground hover:text-emerald-400"
                                             >
-                                                <Link href={`/report/${m.id}`} title="Share Report">
+                                                <Link href={`/report/${m.public_slug || m.id}`} title="Share Report">
                                                     <Share2 className="w-3.5 h-3.5" />
                                                 </Link>
                                             </Button>
