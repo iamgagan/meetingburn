@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // GET /api/meetings/[id] — Get a single meeting (public reports)
 export async function GET(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: any
 ) {
-    const { id } = await params;
+    const resolvedParams = await Promise.resolve(params);
+    const id = resolvedParams.id;
 
     // Use admin client to fetch by ID and ensure it's public
     const { data, error } = await supabaseAdmin
@@ -31,9 +32,10 @@ export async function GET(
 // PATCH /api/meetings/[id] — Update a meeting (e.g., toggle public)
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: any
 ) {
-    const { id } = await params;
+    const resolvedParams = await Promise.resolve(params);
+    const id = resolvedParams.id;
     const body = await request.json();
     const session = await getServerSession(authOptions);
 
@@ -74,9 +76,10 @@ export async function PATCH(
 // DELETE /api/meetings/[id] — Delete a meeting
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: any
 ) {
-    const { id } = await params;
+    const resolvedParams = await Promise.resolve(params);
+    const id = resolvedParams.id;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {

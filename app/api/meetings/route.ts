@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
 import { authOptions } from '@/lib/auth';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
+import { rateLimit } from '@/lib/rate-limit';
+
+const meetingSchema = z.object({
+    meeting_name: z.string().optional(),
+    attendees: z.number().int().positive(),
+    avg_salary: z.number().positive(),
+    duration_seconds: z.number().nonnegative(),
+    total_cost: z.number().nonnegative().optional(),
+    source: z.string().optional()
+});
 
 // GET /api/meetings — List meetings for authenticated user
 export async function GET() {
@@ -35,22 +46,33 @@ export async function GET() {
 
 // POST /api/meetings — Save a meeting
 export async function POST(request: NextRequest) {
+    if (!rateLimit(request, 10, 60000)) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+        // Return 401 early so client can gracefully fall back to localStorage
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     try {
         const body = await request.json();
-        const { meeting_name, attendees, avg_salary, duration_seconds, total_cost, source } = body;
 
-        if (!attendees || !avg_salary || !duration_seconds) {
+        const validation = meetingSchema.safeParse(body);
+        if (!validation.success) {
             return NextResponse.json(
-                { error: 'Missing required fields: attendees, avg_salary, duration_seconds' },
+                { error: 'Validation failed', details: validation.error.format() },
                 { status: 400 }
             );
         }
 
+        const { meeting_name, attendees, avg_salary, duration_seconds, total_cost, source } = validation.data;
+
         const meeting = {
             id: crypto.randomUUID(),
-            user_id: session?.user ? (session.user as Record<string, unknown>).id : 'anonymous',
+            user_id: (session.user as Record<string, unknown>).id,
             meeting_name: meeting_name || 'Untitled Meeting',
             attendees,
             avg_salary,
