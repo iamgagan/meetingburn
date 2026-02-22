@@ -89,10 +89,12 @@ Open [http://localhost:3000](http://localhost:3000) to see MeetingBurn in action
 ## 🚀 Judge Verification & Setup
 
 ### Supabase Security & Persistence Story
-We intentionally use `supabaseAdmin` (Service Role Key) for all API data persistence to gracefully bridge NextAuth and Supabase without strict RLS row blockers.
+*(Deployment Note: While earlier concepts considered using the Anon client with RLS, the final production architecture deliberately reserves data access strictly to the server using the Service Role client to bridge NextAuth seamlessly.)*
+
+We intentionally use `supabaseAdmin` (Service Role Key) for all API data persistence instead of strict RLS row blockers.
 - **Why?** Passing NextAuth Google sessions directly to Supabase RLS causes friction. Admin clients solve this.
 - **Security**: The `SUPABASE_SERVICE_ROLE_KEY` is completely isolated in `lib/supabase-admin.ts` using the React `server-only` package so it **cannot leak to the client**.
-- **Data Governance**: Ownership is strictly enforced *server-side* within `/api/meetings` by validating the NextAuth session explicitly before returning or mutating records.
+- **Data Governance**: Ownership is strictly enforced *server-side* within `/api/meetings` by physically validating the NextAuth session explicitly before returning or mutating records using the Admin client, ensuring complete sync between Auth and Data layers.
 - **Protection**: We employ **Zod schema validation** for payloads and a **Token Bucket Rate Limiter** to prevent abuse.
 
 

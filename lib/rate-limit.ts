@@ -6,7 +6,11 @@ import { NextRequest } from 'next/server';
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
 
 export function rateLimit(req: NextRequest, limit: number, windowMs: number, userId?: string): boolean {
-    const forwardedFor = req.headers.get('x-forwarded-for');
+    const forwardedFor =
+        req.headers.get('x-forwarded-for') ||
+        req.headers.get('x-real-ip') ||
+        req.headers.get('cf-connecting-ip');
+
     // Take the first IP from a comma-separated list
     const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : 'anonymous';
     const key = userId ? `${ip}_${userId}` : ip;

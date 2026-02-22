@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { getToken } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limit';
 
@@ -12,7 +13,9 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
 
-    const accessToken = (session as any)?.accessToken;
+    // Securely retrieve the accessToken server-side from the JWT
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const accessToken = token?.accessToken as string | undefined;
 
     if (!accessToken) {
         return NextResponse.json({

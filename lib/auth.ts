@@ -23,12 +23,7 @@ export const authOptions: AuthOptions = {
             if (session.user && token.sub) {
                 (session.user as Record<string, unknown>).id = token.sub;
             }
-            if (token.accessToken) {
-                (session as unknown as Record<string, unknown>).accessToken = token.accessToken as string;
-            }
-            if (token.error) {
-                (session as unknown as Record<string, unknown>).error = token.error as string;
-            }
+            // We no longer expose token.accessToken or token.error to the client session
             return session;
         },
         async jwt({ token, account }) {

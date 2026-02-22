@@ -36,7 +36,13 @@ export async function GET() {
         .order('created_at', { ascending: false });
 
     if (!error && data) {
-        return NextResponse.json({ meetings: data });
+        // Normalize any returned string numbers to floats for the UI
+        const normalizedData = data.map((meeting: any) => ({
+            ...meeting,
+            avg_salary: typeof meeting.avg_salary === 'string' ? parseFloat(meeting.avg_salary) : meeting.avg_salary,
+            total_cost: typeof meeting.total_cost === 'string' ? parseFloat(meeting.total_cost) : meeting.total_cost,
+        }));
+        return NextResponse.json({ meetings: normalizedData });
     }
 
     return NextResponse.json(
