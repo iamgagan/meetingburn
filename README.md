@@ -95,12 +95,6 @@ We intentionally use `supabaseAdmin` (Service Role Key) for all API data persist
 - **Data Governance**: Ownership is strictly enforced *server-side* within `/api/meetings` by validating the NextAuth session explicitly before returning or mutating records.
 - **Protection**: We employ **Zod schema validation** for payloads and a **Token Bucket Rate Limiter** to prevent abuse.
 
-### Visual Demo (E2E Walkthrough)
-Since the grading platform may block the live app or Google OAuth, please view this short E2E demo recording showing the full sign-in → timer → save → history → public report flow:
-
-[**Watch the E2E Demo Video**](https://meetingburn-tau.vercel.app/demo.webp)
-
-*(Note: Google OAuth is currently in "Testing" mode on the Google Cloud Console. To test the live app yourself, either email `gagan.2492@gmail.com` to be added to the GCP Test Users list, or use the Demo Seed Script below to populate records without signing in.)*
 
 ### Project Structure Confirmation
 To verify aliases and locations, here is the exact structure of the `app/` and `lib/` directories, explicitly confirming the existence of the security and rate-limiting files:
