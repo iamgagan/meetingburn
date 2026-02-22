@@ -1,23 +1,18 @@
-import { supabase } from './supabase';
 import { MeetingRecord, SalaryPreset } from './types';
 
 // ============================================
-// MEETINGS — Supabase with localStorage fallback
+// MEETINGS — API with localStorage fallback
 // ============================================
 
 export async function getMeetings(): Promise<MeetingRecord[]> {
-    // Try Supabase first
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            const { data, error } = await supabase
-                .from('meetings')
-                .select('*')
-                .order('created_at', { ascending: false });
-            if (!error && data) return data as MeetingRecord[];
+        const response = await fetch('/api/meetings');
+        if (response.ok) {
+            const data = await response.json();
+            return data.meetings as MeetingRecord[];
         }
     } catch {
-        // Fall through to localStorage
+        // Fall through to localStorage if API fails or user is unauthenticated
     }
 
     // Fallback: localStorage
@@ -29,17 +24,16 @@ export async function getMeetings(): Promise<MeetingRecord[]> {
 }
 
 export async function saveMeeting(meeting: MeetingRecord): Promise<MeetingRecord> {
-    // Try Supabase first
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            const row = { ...meeting, user_id: user.id };
-            const { data, error } = await supabase
-                .from('meetings')
-                .insert(row)
-                .select()
-                .single();
-            if (!error && data) return data as MeetingRecord;
+        const response = await fetch('/api/meetings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(meeting),
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.meeting as MeetingRecord;
         }
     } catch {
         // Fall through to localStorage
@@ -53,11 +47,12 @@ export async function saveMeeting(meeting: MeetingRecord): Promise<MeetingRecord
 }
 
 export async function deleteMeeting(id: string): Promise<void> {
-    // Try Supabase first
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            await supabase.from('meetings').delete().eq('id', id);
+        const response = await fetch(`/api/meetings/${id}`, {
+            method: 'DELETE',
+        });
+
+        if (response.ok) {
             return;
         }
     } catch {
@@ -74,20 +69,10 @@ export async function deleteMeeting(id: string): Promise<void> {
 // SALARY PRESETS
 // ============================================
 
-export async function getPresets(): Promise<SalaryPreset[]> {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            const { data, error } = await supabase
-                .from('salary_presets')
-                .select('*')
-                .order('created_at', { ascending: true });
-            if (!error && data) return data as SalaryPreset[];
-        }
-    } catch {
-        // Fall through
-    }
+// TODO: Create dedicated API routes for presets and profile if full persistence is needed.
+// For now, these utilize localStorage as the API for profiles isn't fully wired for NextAuth yet.
 
+export async function getPresets(): Promise<SalaryPreset[]> {
     const saved = localStorage.getItem('meetingburn_presets');
     if (saved) {
         try { return JSON.parse(saved); } catch { return []; }
@@ -96,54 +81,14 @@ export async function getPresets(): Promise<SalaryPreset[]> {
 }
 
 export async function savePresets(presets: SalaryPreset[]): Promise<void> {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            // Delete existing and re-insert (simple upsert for hackathon)
-            await supabase.from('salary_presets').delete().eq('user_id', user.id);
-            if (presets.length > 0) {
-                await supabase.from('salary_presets').insert(
-                    presets.map(p => ({ ...p, user_id: user.id }))
-                );
-            }
-            return;
-        }
-    } catch {
-        // Fall through
-    }
-
     localStorage.setItem('meetingburn_presets', JSON.stringify(presets));
 }
 
 export async function getDefaultSalary(): Promise<number> {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            const { data } = await supabase
-                .from('profiles')
-                .select('default_salary')
-                .eq('id', user.id)
-                .single();
-            if (data?.default_salary) return Number(data.default_salary);
-        }
-    } catch {
-        // Fall through
-    }
-
     const saved = localStorage.getItem('meetingburn_default_salary');
     return saved ? Number(saved) : 120000;
 }
 
 export async function saveDefaultSalary(salary: number): Promise<void> {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            await supabase.from('profiles').update({ default_salary: salary }).eq('id', user.id);
-            return;
-        }
-    } catch {
-        // Fall through
-    }
-
     localStorage.setItem('meetingburn_default_salary', salary.toString());
 }
