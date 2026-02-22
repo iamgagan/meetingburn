@@ -7,6 +7,8 @@
 
 > Built for the **48-Hour Vibe Coding Challenge** by **Team KashMoney**
 
+🌐 **Live Demo:** [https://meetingburn-tau.vercel.app](https://meetingburn-tau.vercel.app)
+
 ---
 
 ## What is MeetingBurn?
