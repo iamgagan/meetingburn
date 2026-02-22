@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Calculator, Clock, DollarSign, TrendingUp, Calendar, Share2 } from 'lucide-react';
+import { Calculator, Clock, DollarSign, TrendingUp, Calendar, Share2, Check } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import CostTicker from '@/components/CostTicker';
@@ -15,6 +15,7 @@ import Link from 'next/link';
 export default function DashboardPage() {
     const [activeMeeting, setActiveMeeting] = useState<MeetingFormData | null>(null);
     const [meetings, setMeetings] = useState<MeetingRecord[]>([]);
+    const [sharedId, setSharedId] = useState<string | null>(null);
 
     // Load meetings from Supabase / localStorage on mount
     const loadMeetings = useCallback(async () => {
@@ -49,13 +50,30 @@ export default function DashboardPage() {
             duration_seconds: durationSeconds,
             total_cost: totalCost,
             source: 'manual',
-            is_public: false,
+            is_public: true,
             created_at: new Date().toISOString(),
         };
 
         const saved = await saveMeeting(newMeeting);
         setMeetings((prev) => [saved, ...prev]);
         setActiveMeeting(null);
+    };
+
+    const handleShare = async (meetingId: string) => {
+        try {
+            // Make the meeting public in Supabase
+            await fetch(`/api/meetings/${meetingId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_public: true }),
+            });
+        } catch {
+            // Even if PATCH fails (e.g. not in Supabase), still copy the link
+        }
+        const url = `${window.location.origin}/report/${meetingId}`;
+        navigator.clipboard.writeText(url);
+        setSharedId(meetingId);
+        setTimeout(() => setSharedId(null), 2000);
     };
 
     // Stats
@@ -212,13 +230,17 @@ export default function DashboardPage() {
                                                         {meeting.source}
                                                     </Badge>
                                                 </div>
-                                                <Link
-                                                    href={`/report/${meeting.id}`}
+                                                <button
+                                                    onClick={() => handleShare(meeting.id)}
                                                     className="p-1.5 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-emerald-400 transition-colors"
-                                                    title="Share Report"
+                                                    title={sharedId === meeting.id ? 'Link copied!' : 'Share Report'}
                                                 >
-                                                    <Share2 className="w-3.5 h-3.5" />
-                                                </Link>
+                                                    {sharedId === meeting.id ? (
+                                                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                                    ) : (
+                                                        <Share2 className="w-3.5 h-3.5" />
+                                                    )}
+                                                </button>
                                             </div>
                                         </CardContent>
                                     </Card>
