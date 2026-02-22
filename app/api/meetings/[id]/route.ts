@@ -6,10 +6,9 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 // GET /api/meetings/[id] — Get a single meeting (public reports)
 export async function GET(
     request: NextRequest,
-    { params }: any
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const resolvedParams = await Promise.resolve(params);
-    const id = resolvedParams.id;
+    const { id } = await params;
 
     // Use admin client to fetch by ID or public slug and ensure it's public
     const { data, error } = await supabaseAdmin
@@ -32,10 +31,9 @@ export async function GET(
 // PATCH /api/meetings/[id] — Update a meeting (e.g., toggle public)
 export async function PATCH(
     request: NextRequest,
-    { params }: any
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const resolvedParams = await Promise.resolve(params);
-    const id = resolvedParams.id;
+    const { id } = await params;
     const body = await request.json();
     const session = await getServerSession(authOptions);
 
@@ -76,10 +74,9 @@ export async function PATCH(
 // DELETE /api/meetings/[id] — Delete a meeting
 export async function DELETE(
     request: NextRequest,
-    { params }: any
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const resolvedParams = await Promise.resolve(params);
-    const id = resolvedParams.id;
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {

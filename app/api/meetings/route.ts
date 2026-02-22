@@ -47,15 +47,17 @@ export async function GET() {
 
 // POST /api/meetings — Save a meeting
 export async function POST(request: NextRequest) {
-    if (!rateLimit(request, 10, 60000)) {
-        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
-    }
-
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
         // Return 401 early so client can gracefully fall back to localStorage
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userId = (session.user as Record<string, unknown>).id as string;
+
+    if (!rateLimit(request, 10, 60000, userId)) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
 
     try {
@@ -99,7 +101,7 @@ export async function POST(request: NextRequest) {
             total_cost: total_cost || 0,
             source: source || 'manual',
             calendar_event_id: calendar_event_id || null,
-            is_public: true,
+            is_public: false,
             public_slug,
             created_at: new Date().toISOString(),
         };

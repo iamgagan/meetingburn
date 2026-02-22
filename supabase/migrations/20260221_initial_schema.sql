@@ -104,6 +104,7 @@ CREATE POLICY "Users can delete own meetings"
 CREATE INDEX IF NOT EXISTS idx_meetings_user_id ON public.meetings(user_id);
 CREATE INDEX IF NOT EXISTS idx_meetings_created_at ON public.meetings(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_meetings_public_slug ON public.meetings(public_slug) WHERE public_slug IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_meetings_user_calendar_dedupe ON public.meetings(user_id, calendar_event_id) WHERE calendar_event_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_salary_presets_user_id ON public.salary_presets(user_id);
 
 

@@ -5,13 +5,16 @@ import { NextRequest } from 'next/server';
 // you'd use Upstash Redis or Vercel KV for this.
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
 
-export function rateLimit(req: NextRequest, limit: number, windowMs: number): boolean {
-    const ip = req.headers.get('x-forwarded-for') ?? 'anonymous';
+export function rateLimit(req: NextRequest, limit: number, windowMs: number, userId?: string): boolean {
+    const forwardedFor = req.headers.get('x-forwarded-for');
+    // Take the first IP from a comma-separated list
+    const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : 'anonymous';
+    const key = userId ? `${ip}_${userId}` : ip;
     const now = Date.now();
-    const entry = rateLimitMap.get(ip);
+    const entry = rateLimitMap.get(key);
 
     if (!entry || now - entry.lastReset > windowMs) {
-        rateLimitMap.set(ip, { count: 1, lastReset: now });
+        rateLimitMap.set(key, { count: 1, lastReset: now });
         return true;
     }
 

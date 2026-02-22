@@ -9,6 +9,8 @@ export const authOptions: AuthOptions = {
             authorization: {
                 params: {
                     scope: 'openid email profile https://www.googleapis.com/auth/calendar.readonly',
+                    access_type: 'offline',
+                    prompt: 'consent',
                 },
             },
         }),
@@ -21,17 +23,57 @@ export const authOptions: AuthOptions = {
             if (session.user && token.sub) {
                 (session.user as Record<string, unknown>).id = token.sub;
             }
-            // Pass Google access token to session for Calendar API
             if (token.accessToken) {
                 (session as unknown as Record<string, unknown>).accessToken = token.accessToken as string;
+            }
+            if (token.error) {
+                (session as unknown as Record<string, unknown>).error = token.error as string;
             }
             return session;
         },
         async jwt({ token, account }) {
-            if (account?.access_token) {
-                token.accessToken = account.access_token;
+            // Initial sign in
+            if (account) {
+                return {
+                    ...token,
+                    accessToken: account.access_token,
+                    expiresAt: account.expires_at ? account.expires_at * 1000 : 0,
+                    refreshToken: account.refresh_token,
+                };
             }
-            return token;
+
+            // Return previous token if the access token has not expired yet
+            if (Date.now() < (token.expiresAt as number)) {
+                return token;
+            }
+
+            // Access token has expired, try to update it
+            try {
+                const response = await fetch('https://oauth2.googleapis.com/token', {
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        client_id: process.env.GOOGLE_CLIENT_ID!,
+                        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+                        grant_type: 'refresh_token',
+                        refresh_token: token.refreshToken as string,
+                    }),
+                    method: 'POST',
+                });
+
+                const tokens = await response.json();
+
+                if (!response.ok) throw tokens;
+
+                return {
+                    ...token,
+                    accessToken: tokens.access_token,
+                    expiresAt: Date.now() + tokens.expires_in * 1000,
+                    refreshToken: tokens.refresh_token ?? token.refreshToken, // Fall back to old refresh token
+                };
+            } catch (error) {
+                console.error('Error refreshing access token', error);
+                return { ...token, error: 'RefreshAccessTokenError' };
+            }
         },
     },
     secret: process.env.NEXTAUTH_SECRET,

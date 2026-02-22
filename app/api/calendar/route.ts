@@ -5,10 +5,13 @@ import { rateLimit } from '@/lib/rate-limit';
 
 // GET /api/calendar — Fetch Google Calendar events
 export async function GET(request: NextRequest) {
-    if (!rateLimit(request, 5, 60000)) {
+    const session = await getServerSession(authOptions);
+    const userId = (session?.user as any)?.id;
+
+    if (!rateLimit(request, 5, 60000, userId)) {
         return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
-    const session = await getServerSession(authOptions);
+
     const accessToken = (session as any)?.accessToken;
 
     if (!accessToken) {
