@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🔥 MeetingBurn
+
+**See what your meetings really cost — in real-time.**
+
+[![Live Demo](https://img.shields.io/badge/Live-meetingburn--tau.vercel.app-emerald?style=for-the-badge)](https://meetingburn-tau.vercel.app)
+[![GitHub](https://img.shields.io/badge/GitHub-iamgagan%2Fmeetingburn-black?style=for-the-badge&logo=github)](https://github.com/iamgagan/meetingburn)
+
+> Built for the **48-Hour Vibe Coding Challenge** by **Team KashMoney**
+
+---
+
+## What is MeetingBurn?
+
+A real-time meeting cost calculator that shows teams the true dollar cost of their meetings — live, as they happen. Enter the number of attendees and their average salary, start the timer, and watch the money tick up every second.
+
+![Landing Page](./landing_page_KashMoney.png)
+
+## Features
+
+- 🔥 **Real-time Cost Ticker** — Live-updating dollar counter with severity-based color coding (green → yellow → red)
+- 📅 **Google Calendar Sync** — Auto-import meetings with attendee counts for effortless tracking
+- 📊 **Meeting History & Analytics** — Weekly cost trends, sortable tables, and CSV export
+- 🔗 **Shareable Reports** — Public links showing meeting cost breakdowns
+- 👥 **Salary Presets** — Role-based salaries (Engineer, PM, Designer) for accurate calculations
+- 🔐 **Google OAuth** — Sign in with Google using NextAuth.js
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) + TypeScript |
+| Styling | TailwindCSS v4 + Shadcn/ui |
+| Animations | Framer Motion |
+| Charts | Recharts |
+| Database | Supabase (PostgreSQL) |
+| Auth | NextAuth.js (Google OAuth) |
+| Hosting | Vercel |
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Clone the repo
+git clone https://github.com/iamgagan/meetingburn.git
+cd meetingburn
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Fill in your Supabase and Google OAuth credentials
+
+# Run the dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see MeetingBurn in action.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `NEXTAUTH_URL` | App URL (http://localhost:3000 for dev) |
+| `NEXTAUTH_SECRET` | Random secret for NextAuth.js |
 
-## Learn More
+## Route Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+/                          → Landing page with live demo
+/signin                    → Google OAuth sign-in
+/dashboard                 → Main dashboard with cost tracker
+/dashboard/calendar        → Google Calendar sync
+/dashboard/history         → Meeting history & analytics
+/dashboard/settings        → Salary presets management
+/report/[id]               → Shareable meeting report
+/api/auth/[...nextauth]    → Auth endpoints
+/api/calendar              → Calendar API
+/api/meetings              → Meetings CRUD API
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Team
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Gagandeep Singh** — [gagan.2492@gmail.com](mailto:gagan.2492@gmail.com)
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*Built with ❤️ and too many meetings by Team KashMoney*

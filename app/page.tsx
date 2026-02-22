@@ -564,8 +564,8 @@ export default function LandingPage() {
               >
                 <Card
                   className={`h-full relative bento-card ${plan.popular
-                      ? 'border-emerald-500/30 bg-emerald-500/5 shadow-lg shadow-emerald-500/10 animated-border'
-                      : 'border-border/10 bg-card/30'
+                    ? 'border-emerald-500/30 bg-emerald-500/5 shadow-lg shadow-emerald-500/10 animated-border'
+                    : 'border-border/10 bg-card/30'
                     }`}
                 >
                   {plan.popular && (
@@ -593,12 +593,15 @@ export default function LandingPage() {
                     </ul>
                     <Button
                       className={`w-full h-11 ${plan.popular
-                          ? 'bg-emerald-500 hover:bg-emerald-400 text-background font-semibold shadow-lg shadow-emerald-500/20'
-                          : ''
+                        ? 'bg-emerald-500 hover:bg-emerald-400 text-background font-semibold shadow-lg shadow-emerald-500/20'
+                        : ''
                         }`}
                       variant={plan.popular ? 'default' : 'outline'}
+                      asChild
                     >
-                      {plan.cta}
+                      <a href={plan.name === 'Team' ? 'mailto:gagan.2492@gmail.com?subject=MeetingBurn Team Plan' : '/signin'}>
+                        {plan.cta}
+                      </a>
                     </Button>
                   </CardContent>
                 </Card>
