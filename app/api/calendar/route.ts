@@ -1,36 +1,69 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { supabaseAdmin } from '@/lib/supabase';
 
 // GET /api/calendar — Fetch Google Calendar events
-// In production, this uses NextAuth session to get the user's Google access token
-
 export async function GET() {
-    // TODO: When Google OAuth is configured, uncomment this block:
-    //
-    // const session = await getServerSession(authOptions);
-    // const accessToken = (session as any)?.accessToken;
-    //
-    // if (accessToken) {
-    //   const response = await fetch(
-    //     'https://www.googleapis.com/calendar/v3/calendars/primary/events?' +
-    //       new URLSearchParams({
-    //         timeMin: new Date().toISOString(),
-    //         timeMax: new Date(Date.now() + 86400000).toISOString(),
-    //         singleEvents: 'true',
-    //         orderBy: 'startTime',
-    //       }),
-    //     {
-    //       headers: { Authorization: `Bearer ${accessToken}` },
-    //     }
-    //   );
-    //   const data = await response.json();
-    //   // Map Google Calendar events to our format
-    // }
+    const session = await getServerSession(authOptions);
+    const accessToken = (session as any)?.accessToken;
 
-    // Demo data — randomized times based on current time to look realistic
+    if (!accessToken) {
+        return NextResponse.json({
+            demo: true,
+            message: 'No access token found. Using demo data.',
+            events: getDemoMeetings(),
+        });
+    }
+
+    try {
+        const response = await fetch(
+            'https://www.googleapis.com/calendar/v3/calendars/primary/events?' +
+            new URLSearchParams({
+                timeMin: new Date().toISOString(),
+                timeMax: new Date(Date.now() + 7 * 86400000).toISOString(), // Look ahead 7 days
+                singleEvents: 'true',
+                orderBy: 'startTime',
+            }),
+            {
+                headers: { Authorization: `Bearer ${accessToken}` },
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch from Google Calendar');
+        }
+
+        const data = await response.json();
+
+        // Map Google Calendar events to our internal meeting format
+        const events = (data.items || []).map((item: any) => ({
+            id: item.id,
+            summary: item.summary || 'Untitled Meeting',
+            start: item.start?.dateTime || item.start?.date,
+            end: item.end?.dateTime || item.end?.date,
+            attendeeCount: (item.attendees?.length || 0) + 1, // +1 for the organizer
+        }));
+
+        return NextResponse.json({
+            demo: false,
+            events,
+        });
+    } catch (error: any) {
+        console.error('Calendar API Error:', error);
+        return NextResponse.json({
+            demo: true,
+            error: error.message,
+            events: getDemoMeetings(),
+        });
+    }
+}
+
+function getDemoMeetings() {
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0);
 
-    const demoMeetings = [
+    return [
         {
             id: `cal-${now.toISOString().split('T')[0]}-1`,
             summary: 'Daily Standup',
@@ -67,9 +100,4 @@ export async function GET() {
             attendeeCount: 25,
         },
     ];
-
-    return NextResponse.json({
-        demo: true,
-        events: demoMeetings,
-    });
 }

@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabaseAdmin } from '@/lib/supabase';
 
 // GET /api/meetings — List meetings for authenticated user
 export async function GET() {
@@ -20,24 +16,21 @@ export async function GET() {
 
     const userId = (session.user as Record<string, unknown>).id as string;
 
-    if (supabaseUrl) {
-        const { data, error } = await supabase
-            .from('meetings')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
+    // Use admin client to bypass RLS and filter by userId manually
+    const { data, error } = await supabaseAdmin
+        .from('meetings')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
-        if (!error && data) {
-            return NextResponse.json({ meetings: data });
-        }
-
-        return NextResponse.json(
-            { error: error?.message || 'Failed to fetch meetings' },
-            { status: 500 }
-        );
+    if (!error && data) {
+        return NextResponse.json({ meetings: data });
     }
 
-    return NextResponse.json({ meetings: [] });
+    return NextResponse.json(
+        { error: error?.message || 'Failed to fetch meetings' },
+        { status: 500 }
+    );
 }
 
 // POST /api/meetings — Save a meeting
@@ -68,19 +61,22 @@ export async function POST(request: NextRequest) {
             created_at: new Date().toISOString(),
         };
 
-        if (supabaseUrl && session?.user) {
-            const { data, error } = await supabase
-                .from('meetings')
-                .insert(meeting)
-                .select()
-                .single();
+        // Use admin client to save meeting
+        // (Ownership is established by the user_id field)
+        const { data, error } = await supabaseAdmin
+            .from('meetings')
+            .insert(meeting)
+            .select()
+            .single();
 
-            if (!error && data) {
-                return NextResponse.json({ meeting: data }, { status: 201 });
-            }
+        if (!error && data) {
+            return NextResponse.json({ meeting: data }, { status: 201 });
         }
 
-        return NextResponse.json({ meeting }, { status: 201 });
+        return NextResponse.json(
+            { error: error?.message || 'Failed to save meeting' },
+            { status: 500 }
+        );
     } catch {
         return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }

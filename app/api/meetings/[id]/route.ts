@@ -1,31 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabaseAdmin } from '@/lib/supabase';
 
 // GET /api/meetings/[id] — Get a single meeting (public reports)
-// Note: In Next.js 15+, route params are async (Promise<{ id: string }>)
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     const { id } = await params;
 
-    if (supabaseUrl) {
-        const { data, error } = await supabase
-            .from('meetings')
-            .select('*')
-            .eq('id', id)
-            .eq('is_public', true)
-            .single();
+    // Use admin client to fetch by ID and ensure it's public
+    const { data, error } = await supabaseAdmin
+        .from('meetings')
+        .select('*')
+        .eq('id', id)
+        .eq('is_public', true)
+        .single();
 
-        if (!error && data) {
-            return NextResponse.json(data);
-        }
+    if (!error && data) {
+        return NextResponse.json(data);
     }
 
     return NextResponse.json(
@@ -35,7 +29,6 @@ export async function GET(
 }
 
 // PATCH /api/meetings/[id] — Update a meeting (e.g., toggle public)
-// Requires authentication; verifies the requester owns the meeting
 export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -44,25 +37,28 @@ export async function PATCH(
     const body = await request.json();
     const session = await getServerSession(authOptions);
 
-    if (!supabaseUrl) {
-        return NextResponse.json({ message: `Meeting ${id} updated`, updates: body });
+    if (!session?.user) {
+        return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    // If user is authenticated, verify ownership before updating
-    if (session?.user) {
-        const userId = (session.user as Record<string, unknown>).id as string;
-        const { data: existing } = await supabase
-            .from('meetings')
-            .select('user_id')
-            .eq('id', id)
-            .single();
+    const userId = (session.user as Record<string, unknown>).id as string;
 
-        if (existing && existing.user_id !== userId && existing.user_id !== 'local') {
-            return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
-        }
+    // Verify ownership manually with admin client before updating
+    const { data: existing } = await supabaseAdmin
+        .from('meetings')
+        .select('user_id')
+        .eq('id', id)
+        .single();
+
+    if (!existing) {
+        return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
     }
 
-    const { data, error } = await supabase
+    if (existing.user_id !== userId) {
+        return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    }
+
+    const { data, error } = await supabaseAdmin
         .from('meetings')
         .update(body)
         .eq('id', id)
@@ -75,7 +71,7 @@ export async function PATCH(
     return NextResponse.json({ error: error?.message }, { status: 400 });
 }
 
-// DELETE /api/meetings/[id] — Delete a meeting (requires ownership)
+// DELETE /api/meetings/[id] — Delete a meeting
 export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -83,25 +79,28 @@ export async function DELETE(
     const { id } = await params;
     const session = await getServerSession(authOptions);
 
-    if (!supabaseUrl) {
-        return NextResponse.json({ message: `Meeting ${id} deleted` });
+    if (!session?.user) {
+        return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    // Verify ownership before deleting
-    if (session?.user) {
-        const userId = (session.user as Record<string, unknown>).id as string;
-        const { data: existing } = await supabase
-            .from('meetings')
-            .select('user_id')
-            .eq('id', id)
-            .single();
+    const userId = (session.user as Record<string, unknown>).id as string;
 
-        if (existing && existing.user_id !== userId && existing.user_id !== 'local') {
-            return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
-        }
+    // Verify ownership manually with admin client before deleting
+    const { data: existing } = await supabaseAdmin
+        .from('meetings')
+        .select('user_id')
+        .eq('id', id)
+        .single();
+
+    if (!existing) {
+        return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
     }
 
-    const { error } = await supabase
+    if (existing.user_id !== userId) {
+        return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    }
+
+    const { error } = await supabaseAdmin
         .from('meetings')
         .delete()
         .eq('id', id);
